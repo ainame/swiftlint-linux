@@ -16,6 +16,10 @@ inputs:
     description: "Additional SwiftLint reporter to print (set to json to suppress)."
     required: false
     default: "github-actions-logging"
+  strict:
+    description: "Set to true to add --strict so warnings cause a non-zero exit status."
+    required: false
+    default: "false"
   ignore_failure:
     description: "Set to true to continue even when SwiftLint finds violations."
     required: false
@@ -69,17 +73,21 @@ runs:
         rm -f "$json_path"
         cd "${{ inputs.working_directory }}"
         swiftlint_cmd="${{ steps.prepare.outputs.swiftlint-bin }}"
+        strict_flag=""
+        if [ "${{ inputs.strict }}" = "true" ]; then
+          strict_flag="--strict"
+        fi
         if [ -n "${{ inputs.config_path }}" ]; then
-          "$swiftlint_cmd" lint --reporter json --config "${{ inputs.config_path }}" > "$json_path"
+          "$swiftlint_cmd" lint $strict_flag --reporter json --config "${{ inputs.config_path }}" > "$json_path"
           swiftlint_status=$?
           if [ "${{ inputs.reporter }}" != "json" ]; then
-            "$swiftlint_cmd" lint --reporter "${{ inputs.reporter }}" --config "${{ inputs.config_path }}"
+            "$swiftlint_cmd" lint $strict_flag --reporter "${{ inputs.reporter }}" --config "${{ inputs.config_path }}"
           fi
         else
-          "$swiftlint_cmd" lint --reporter json > "$json_path"
+          "$swiftlint_cmd" lint $strict_flag --reporter json > "$json_path"
           swiftlint_status=$?
           if [ "${{ inputs.reporter }}" != "json" ]; then
-            "$swiftlint_cmd" lint --reporter "${{ inputs.reporter }}"
+            "$swiftlint_cmd" lint $strict_flag --reporter "${{ inputs.reporter }}"
           fi
         fi
         set -e
