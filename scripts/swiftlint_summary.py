@@ -36,16 +36,13 @@ def build_summary(violations: List[Dict[str, Any]]) -> str:
         # the summary remains informative when no issues are found.
         return "No SwiftLint violations found."
     lines: List[str] = []
-    for violation in violations[:10]:
+    for violation in violations:
         file_path = str(violation.get("file", "(unknown file)"))
         line = violation.get("line", 0) or 0
         severity = violation.get("severity", "warning")
         rule = violation.get("rule_id") or violation.get("type") or "unknown-rule"
         reason = violation.get("reason") or "No description provided."
         lines.append(f"{file_path}:{line}: [{severity}] {rule} - {reason}")
-    remaining = len(violations) - len(lines)
-    if remaining > 0:
-        lines.append(f"+ {remaining} more violation(s)...")
     return "\n".join(lines)
 
 
