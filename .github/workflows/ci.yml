@@ -16,6 +16,9 @@ jobs:
       - name: Run SwiftLint
         id: lint
         uses: ./
+        with:
+          # Prepared Swift file is meant to fail
+          ignore_failure: true
 
       - name: Publish SwiftLint summary
         run: |

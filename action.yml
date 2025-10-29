@@ -96,4 +96,5 @@ runs:
       if: inputs.ignore_failure != 'true' && steps.swiftlint_run.outputs.exit-code != '0'
       shell: bash
       run: |
-        echo "::warning::SwiftLint reported violations (exit code ${{ steps.swiftlint_run.outputs.exit-code }})"
+        echo "::error::SwiftLint reported violations (exit code ${{ steps.swiftlint_run.outputs.exit-code }})"
+        exit "${{ steps.swiftlint_run.outputs.exit-code }}"
