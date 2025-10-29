@@ -1,4 +1,4 @@
-name: "Linux SwiftLint Action"
+name: "swiftlint-linux"
 description: "Run SwiftLint on GitHub's Ubuntu runners and publish a concise summary."
 inputs:
   swiftlint_version:

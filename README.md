@@ -1,4 +1,4 @@
-# linux-swiftlint-action
+# swiftlint-linux
 
 Minimal composite action that uses the SwiftLint static Linux binary, runs it on Ubuntu runners, and publishes a short summary in job outputs.
 
@@ -6,7 +6,7 @@ Minimal composite action that uses the SwiftLint static Linux binary, runs it on
 
 ```yaml
 - name: Run SwiftLint
-  uses: ainame/linux-swiftlint-action@main
+  uses: ainame/swiftlint-linux@main
 ```
 
 The action exposes three outputs:
@@ -14,11 +14,11 @@ The action exposes three outputs:
 - `issue-count`: Number of violations detected.
 - `exit-code`: SwiftLint exit status for downstream logic.
 
-This is an example of what this action will report to GITHUB_STEP_SUMMARY.
+This is what the summary block can look like when a violation is present:
 
 ```
 ### SwiftLint Summary
-/home/runner/work/linux-swiftlint-action/linux-swiftlint-action/Sources/Greeting.swift:8: [Error] force_cast - Force casts should be avoided
+/home/runner/work/swiftlint-linux/swiftlint-linux/Sources/Greeting.swift:8: [Error] force_cast - Force casts should be avoided
 
 Total violations: 1
 ```
