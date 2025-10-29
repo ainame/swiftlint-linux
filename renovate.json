@@ -1,0 +1,26 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "schedule": ["after 00:00 and before 01:00 every day"],
+  "timezone": "UTC",
+  "regexManagers": [
+    {
+      "fileMatch": ["^action\\.yml$"],
+      "matchStrings": [
+        "default:\\s*\"?(?<currentValue>\\d+\\.\\d+\\.\\d+)\"?\\s*#\\s*renovate: datasource=github-releases depName=realm/SwiftLint"
+      ],
+      "datasourceTemplate": "github-releases",
+      "packageNameTemplate": "realm/SwiftLint"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchPackageNames": ["realm/SwiftLint"],
+      "matchManagers": ["regex"],
+      "matchDatasources": ["github-releases"],
+      "automerge": true,
+      "automergeType": "branch",
+      "platformAutomerge": true
+    }
+  ]
+}

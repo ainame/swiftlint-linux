@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-slim
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run SwiftLint
+        id: lint
+        uses: ./
+
+      - name: Publish SwiftLint summary
+        run: |
+          {
+            echo '### SwiftLint Summary'
+            printf '%s\n' "${{ steps.lint.outputs['lint-report'] }}"
+            echo
+            echo "Total violations: ${{ steps.lint.outputs['issue-count'] }}"
+          } >> "$GITHUB_STEP_SUMMARY"

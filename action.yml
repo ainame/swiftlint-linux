@@ -1,0 +1,99 @@
+name: "Linux SwiftLint Action"
+description: "Run SwiftLint on GitHub's Ubuntu runners and publish a concise summary."
+inputs:
+  swiftlint_version:
+    description: "SwiftLint release tag to download (e.g. 0.62.2)."
+    required: false
+    default: "0.62.2" # renovate: datasource=github-releases depName=realm/SwiftLint
+  config_path:
+    description: "Optional path to a SwiftLint configuration file."
+    required: false
+  working_directory:
+    description: "Directory to run SwiftLint from."
+    required: false
+    default: "."
+  reporter:
+    description: "Additional SwiftLint reporter to print (set to json to suppress)."
+    required: false
+    default: "github-actions-logging"
+  ignore_failure:
+    description: "Set to true to continue even when SwiftLint finds violations."
+    required: false
+    default: "false"
+  use_cache:
+    description: "Set to false to skip caching the downloaded SwiftLint archive."
+    required: false
+    default: "true"
+outputs:
+  lint-report:
+    description: "Multi-line SwiftLint summary."
+    value: ${{ steps.swiftlint_summary.outputs.lint-report }}
+  exit-code:
+    description: "Exit status returned by SwiftLint."
+    value: ${{ steps.swiftlint_run.outputs.exit-code }}
+  issue-count:
+    description: "Number of SwiftLint violations detected."
+    value: ${{ steps.swiftlint_summary.outputs.issue-count }}
+runs:
+  using: "composite"
+  steps:
+    - id: cache
+      if: inputs.use_cache == 'true'
+      uses: actions/cache@v4
+      with:
+        path: ${{ runner.tool_cache }}/swiftlint/${{ inputs.swiftlint_version }}
+        key: swiftlint-archive-${{ inputs.swiftlint_version }}
+
+    - id: prepare
+      shell: bash
+      run: |
+        set -euo pipefail
+        archive_dir="${{ runner.tool_cache }}/swiftlint/${{ inputs.swiftlint_version }}"
+        archive_path="${archive_dir}/swiftlint_linux_amd64.zip"
+        mkdir -p "$archive_dir"
+        if [ ! -f "$archive_path" ]; then
+          curl -sSLo "$archive_path" "https://github.com/realm/SwiftLint/releases/download/${{ inputs.swiftlint_version }}/swiftlint_linux_amd64.zip"
+        fi
+        install_dir="${RUNNER_TEMP}/swiftlint-${{ inputs.swiftlint_version }}"
+        rm -rf "$install_dir"
+        mkdir -p "$install_dir"
+        unzip -oq "$archive_path" -d "$install_dir"
+        chmod +x "$install_dir/swiftlint-static"
+        echo "swiftlint-bin=$install_dir/swiftlint-static" >> "$GITHUB_OUTPUT"
+
+    - id: swiftlint_run
+      shell: bash
+      run: |
+        set +e
+        json_path="${RUNNER_TEMP}/swiftlint-report.json"
+        rm -f "$json_path"
+        cd "${{ inputs.working_directory }}"
+        swiftlint_cmd="${{ steps.prepare.outputs.swiftlint-bin }}"
+        if [ -n "${{ inputs.config_path }}" ]; then
+          "$swiftlint_cmd" lint --reporter json --config "${{ inputs.config_path }}" > "$json_path"
+          swiftlint_status=$?
+          if [ "${{ inputs.reporter }}" != "json" ]; then
+            "$swiftlint_cmd" lint --reporter "${{ inputs.reporter }}" --config "${{ inputs.config_path }}"
+          fi
+        else
+          "$swiftlint_cmd" lint --reporter json > "$json_path"
+          swiftlint_status=$?
+          if [ "${{ inputs.reporter }}" != "json" ]; then
+            "$swiftlint_cmd" lint --reporter "${{ inputs.reporter }}"
+          fi
+        fi
+        set -e
+        echo "json-path=$json_path" >> "$GITHUB_OUTPUT"
+        echo "exit-code=$swiftlint_status" >> "$GITHUB_OUTPUT"
+
+    - id: swiftlint_summary
+      shell: bash
+      run: |
+        set -euo pipefail
+        python3 "${{ github.action_path }}/scripts/swiftlint_summary.py" "${{ steps.swiftlint_run.outputs['json-path'] }}"
+
+    - name: Report SwiftLint violations
+      if: inputs.ignore_failure != 'true' && steps.swiftlint_run.outputs.exit-code != '0'
+      shell: bash
+      run: |
+        echo "::warning::SwiftLint reported violations (exit code ${{ steps.swiftlint_run.outputs.exit-code }})"
