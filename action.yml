@@ -4,7 +4,7 @@ inputs:
   swiftlint_version:
     description: "SwiftLint release tag to download (e.g. 0.62.2)."
     required: false
-    default: "0.63.1" # renovate: datasource=github-releases depName=realm/SwiftLint
+    default: "0.63.2" # renovate: datasource=github-releases depName=realm/SwiftLint
   config_path:
     description: "Optional path to a SwiftLint configuration file."
     required: false
